@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,13 +43,11 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 
 interface BookingFormProps {
   properties: Property[];
-  onSubmit: (data: CreateBookingInput) => void;
+  onSubmit: (data: CreateBookingInput, intent: "draft" | "send") => void;
   isSubmitting?: boolean;
 }
 
 export function BookingForm({ properties, onSubmit, isSubmitting = false }: BookingFormProps) {
-  const [intent, setIntent] = useState<"draft" | "send">("draft");
-
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
@@ -58,8 +56,8 @@ export function BookingForm({ properties, onSubmit, isSubmitting = false }: Book
     },
   });
 
-  function handleSubmit(values: BookingFormValues) {
-    const input: CreateBookingInput = {
+  function toInput(values: BookingFormValues): CreateBookingInput {
+    return {
       propertyId: values.propertyId,
       guestName: values.guestName,
       guestEmail: values.guestEmail,
@@ -72,13 +70,19 @@ export function BookingForm({ properties, onSubmit, isSubmitting = false }: Book
       balanceLeadDays: values.balanceLeadDays,
       notes: values.notes,
     };
-    onSubmit(input);
+  }
+
+  function handleDraft(values: BookingFormValues) {
+    onSubmit(toInput(values), "draft");
+  }
+
+  function handleSend(values: BookingFormValues) {
+    onSubmit(toInput(values), "send");
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <input type="hidden" name="_intent" value={intent} />
+      <form className="space-y-6">
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
@@ -249,19 +253,19 @@ export function BookingForm({ properties, onSubmit, isSubmitting = false }: Book
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
-            type="submit"
+            type="button"
             variant="outline"
             disabled={isSubmitting}
-            onClick={() => setIntent("draft")}
+            onClick={form.handleSubmit(handleDraft)}
             className="flex-1"
           >
             Créer en brouillon
           </Button>
           <Button
-            type="submit"
+            type="button"
             disabled={isSubmitting}
-            onClick={() => setIntent("send")}
-            className="flex-1"
+            onClick={form.handleSubmit(handleSend)}
+            className="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150"
           >
             Créer et envoyer l&apos;acompte
           </Button>

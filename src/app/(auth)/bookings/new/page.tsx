@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -16,24 +16,9 @@ export default function NewBookingPage() {
   const { data: properties = [], isLoading: propertiesLoading } = useProperties();
   const createBooking = useCreateBooking();
   const sendDeposit = useSendDeposit();
-  const intentRef = useRef<"draft" | "send">("draft");
-
-  function handleIntentCapture(e: React.MouseEvent<HTMLDivElement>) {
-    const target = e.target as HTMLElement;
-    const button = target.closest('button[type="submit"]');
-    if (!button) return;
-    // Detect intent from button position: second submit button = "send"
-    const form = button.closest("form");
-    if (!form) return;
-    const submitButtons = form.querySelectorAll('button[type="submit"]');
-    const buttons = Array.from(submitButtons);
-    const clickedIndex = buttons.indexOf(button as HTMLButtonElement);
-    intentRef.current = clickedIndex === 1 ? "send" : "draft";
-  }
-
-  async function handleSubmit(data: CreateBookingInput) {
+  async function handleSubmit(data: CreateBookingInput, intent: "draft" | "send") {
     const booking = await createBooking.mutateAsync(data);
-    if (intentRef.current === "send") {
+    if (intent === "send") {
       await sendDeposit.mutateAsync({ bookingId: booking.id });
     }
     router.push(`/bookings/${booking.id}`);
@@ -65,13 +50,11 @@ export default function NewBookingPage() {
       />
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div onClick={handleIntentCapture}>
-          <BookingForm
-            properties={properties}
-            onSubmit={handleSubmit}
-            isSubmitting={createBooking.isPending || sendDeposit.isPending}
-          />
-        </div>
+        <BookingForm
+          properties={properties}
+          onSubmit={handleSubmit}
+          isSubmitting={createBooking.isPending || sendDeposit.isPending}
+        />
       </div>
     </div>
   );

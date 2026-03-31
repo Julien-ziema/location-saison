@@ -1,7 +1,7 @@
 import { and, eq, isNull, lte } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { bookings, payments } from "@/lib/db/schema";
+import { bookings, payments, properties } from "@/lib/db/schema";
 import type { Booking, BookingStatus } from "@/lib/types/booking";
 import { stripeService } from "@/lib/services/stripe-service";
 
@@ -82,20 +82,28 @@ async function sendDeposit(
 ): Promise<{ checkoutUrl: string | null }> {
   const booking = await getBookingOrThrow(bookingId);
 
+  const propertyRows = await db
+    .select({ name: properties.name })
+    .from(properties)
+    .where(eq(properties.id, booking.propertyId))
+    .limit(1);
+  const propertyName = propertyRows[0]?.name ?? "Bien";
+
   let checkoutUrl: string | null = null;
   let providerPaymentId = "pending_stripe_config";
 
   try {
-    checkoutUrl = await stripeService.createDepositCheckout({
+    const result = await stripeService.createDepositCheckout({
       id: booking.id,
       guestName: booking.guestName,
       guestEmail: booking.guestEmail,
-      propertyName: booking.propertyId,
+      propertyName,
       depositAmount: booking.depositAmount,
       cautionAmount: booking.cautionAmount,
       totalAmount: booking.totalAmount,
     });
-    providerPaymentId = checkoutUrl;
+    checkoutUrl = result.url;
+    providerPaymentId = result.sessionId;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("STRIPE_SECRET_KEY non configurée")) {
@@ -124,20 +132,28 @@ async function sendCaution(
 ): Promise<{ clientSecret: string | null }> {
   const booking = await getBookingOrThrow(bookingId);
 
+  const propertyRows = await db
+    .select({ name: properties.name })
+    .from(properties)
+    .where(eq(properties.id, booking.propertyId))
+    .limit(1);
+  const propertyName = propertyRows[0]?.name ?? "Bien";
+
   let clientSecret: string | null = null;
   let providerPaymentId = "pending_stripe_config";
 
   try {
-    clientSecret = await stripeService.createCautionAuthorize({
+    const result = await stripeService.createCautionAuthorize({
       id: booking.id,
       guestName: booking.guestName,
       guestEmail: booking.guestEmail,
-      propertyName: booking.propertyId,
+      propertyName,
       depositAmount: booking.depositAmount,
       cautionAmount: booking.cautionAmount,
       totalAmount: booking.totalAmount,
     });
-    providerPaymentId = clientSecret;
+    clientSecret = result.clientSecret;
+    providerPaymentId = result.paymentIntentId;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("STRIPE_SECRET_KEY non configurée")) {
@@ -166,21 +182,29 @@ async function sendBalance(
 ): Promise<{ clientSecret: string | null }> {
   const booking = await getBookingOrThrow(bookingId);
 
+  const propertyRows = await db
+    .select({ name: properties.name })
+    .from(properties)
+    .where(eq(properties.id, booking.propertyId))
+    .limit(1);
+  const propertyName = propertyRows[0]?.name ?? "Bien";
+
   const balanceAmount = booking.totalAmount - booking.depositAmount;
   let clientSecret: string | null = null;
   let providerPaymentId = "pending_stripe_config";
 
   try {
-    clientSecret = await stripeService.createBalancePaymentIntent({
+    const result = await stripeService.createBalancePaymentIntent({
       id: booking.id,
       guestName: booking.guestName,
       guestEmail: booking.guestEmail,
-      propertyName: booking.propertyId,
+      propertyName,
       depositAmount: booking.depositAmount,
       cautionAmount: booking.cautionAmount,
       totalAmount: booking.totalAmount,
     });
-    providerPaymentId = clientSecret;
+    clientSecret = result.clientSecret;
+    providerPaymentId = result.paymentIntentId;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("STRIPE_SECRET_KEY non configurée")) {

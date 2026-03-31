@@ -8,6 +8,13 @@
       "when": 1774877140305,
       "tag": "0000_high_the_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774885796390,
+      "tag": "0001_volatile_winter_soldier",
+      "breakpoints": true
     }
   ]
 }

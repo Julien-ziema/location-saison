@@ -9,6 +9,15 @@ const createPropertySchema = z.object({
   name: z.string().min(2),
   address: z.string().min(5),
   description: z.string().optional(),
+  capacity: z.number().int().min(1).optional(),
+  bedrooms: z.number().int().min(0).optional(),
+  bathrooms: z.number().int().min(0).optional(),
+  surface: z.number().int().min(1).optional(),
+  amenities: z.array(z.string()).optional(),
+  photos: z.array(z.string().url()).optional(),
+  pricePerNight: z.number().int().positive().optional(),
+  defaultDepositPercent: z.number().int().min(10).max(100).optional(),
+  defaultCautionAmount: z.number().int().positive().optional(),
 });
 
 export async function GET() {
@@ -46,11 +55,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
-  const { name, address, description } = parsed.data;
+  const {
+    name,
+    address,
+    description,
+    capacity,
+    bedrooms,
+    bathrooms,
+    surface,
+    amenities,
+    photos,
+    pricePerNight,
+    defaultDepositPercent,
+    defaultCautionAmount,
+  } = parsed.data;
 
   const [created] = await db
     .insert(properties)
-    .values({ userId, name, address, description })
+    .values({
+      userId,
+      name,
+      address,
+      description,
+      capacity,
+      bedrooms,
+      bathrooms,
+      surface,
+      amenities,
+      photos,
+      pricePerNight,
+      defaultDepositPercent,
+      defaultCautionAmount,
+    })
     .returning();
 
   return NextResponse.json(created, { status: 201 });

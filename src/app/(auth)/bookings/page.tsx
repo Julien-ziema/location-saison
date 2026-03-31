@@ -33,7 +33,7 @@ const ALL_STATUSES: BookingStatus[] = [
 
 export default function BookingsPage() {
   const { filters, setFilters } = useBookingStore();
-  const { data: bookings = [], isLoading } = useBookings({
+  const { data: bookings = [], isLoading, isError } = useBookings({
     propertyId: filters.propertyId ?? undefined,
     status: filters.status ?? undefined,
   });
@@ -45,6 +45,28 @@ export default function BookingsPage() {
 
   function handlePropertyChange(value: string) {
     setFilters({ propertyId: value === "all" ? null : value });
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Réservations"
+          action={
+            <Button asChild className="bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150">
+              <Link href="/bookings/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle réservation
+              </Link>
+            </Button>
+          }
+        />
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white py-16 shadow-sm">
+          <p className="text-sm text-red-500">Erreur lors du chargement des réservations.</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

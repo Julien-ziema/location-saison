@@ -9,7 +9,29 @@ import { PropertyCard } from "@/components/properties/PropertyCard";
 import { useProperties } from "@/lib/hooks/use-properties";
 
 export default function PropertiesPage() {
-  const { data: properties = [], isLoading } = useProperties();
+  const { data: properties = [], isLoading, isError } = useProperties();
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Mes biens"
+          action={
+            <Button asChild className="bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150">
+              <Link href="/properties/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Ajouter un bien
+              </Link>
+            </Button>
+          }
+        />
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white py-16 shadow-sm">
+          <p className="text-sm text-red-500">Erreur lors du chargement des biens.</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

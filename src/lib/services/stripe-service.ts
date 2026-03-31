@@ -26,7 +26,7 @@ function getStripe(): Stripe {
 
 async function createDepositCheckout(
   booking: BookingForStripe,
-): Promise<string> {
+): Promise<{ url: string; sessionId: string }> {
   const stripe = getStripe();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -57,12 +57,12 @@ async function createDepositCheckout(
     throw new Error("Stripe n'a pas retourné d'URL pour la session Checkout");
   }
 
-  return session.url;
+  return { url: session.url, sessionId: session.id };
 }
 
 async function createCautionAuthorize(
   booking: BookingForStripe,
-): Promise<string> {
+): Promise<{ clientSecret: string; paymentIntentId: string }> {
   const stripe = getStripe();
 
   const paymentIntent = await stripe.paymentIntents.create({
@@ -81,12 +81,15 @@ async function createCautionAuthorize(
     );
   }
 
-  return paymentIntent.client_secret;
+  return {
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+  };
 }
 
 async function createBalancePaymentIntent(
   booking: BookingForStripe,
-): Promise<string> {
+): Promise<{ clientSecret: string; paymentIntentId: string }> {
   const stripe = getStripe();
 
   const balanceAmount = booking.totalAmount - booking.depositAmount;
@@ -107,7 +110,10 @@ async function createBalancePaymentIntent(
     );
   }
 
-  return paymentIntent.client_secret;
+  return {
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+  };
 }
 
 async function releaseCaution(providerPaymentId: string): Promise<void> {

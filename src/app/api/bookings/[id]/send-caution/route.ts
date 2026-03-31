@@ -40,19 +40,9 @@ export async function POST(_req: Request, context: RouteContext) {
 
   try {
     const result = await bookingService.sendCaution(id);
-    await db
-      .update(bookings)
-      .set({ status: "caution_pending", updatedAt: new Date() })
-      .where(eq(bookings.id, id));
     return NextResponse.json({ success: true, ...result });
-  } catch {
-    await db
-      .update(bookings)
-      .set({ status: "caution_pending", updatedAt: new Date() })
-      .where(eq(bookings.id, id));
-    return NextResponse.json({
-      success: true,
-      message: "caution_pending (stripe not configured)",
-    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

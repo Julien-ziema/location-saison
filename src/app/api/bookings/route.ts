@@ -147,13 +147,13 @@ export async function POST(req: Request) {
     try {
       await bookingService.sendDeposit(booking.id);
       const [updated] = await db
-        .update(bookings)
-        .set({ status: "deposit_pending", updatedAt: new Date() })
+        .select()
+        .from(bookings)
         .where(eq(bookings.id, booking.id))
-        .returning();
+        .limit(1);
       if (updated) finalBooking = updated;
     } catch {
-      // booking-service not yet configured — booking remains in draft
+      // Stripe not configured — booking remains in draft
     }
   }
 

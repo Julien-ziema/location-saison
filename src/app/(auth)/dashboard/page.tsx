@@ -68,9 +68,31 @@ function computeStats(bookings: BookingWithPayments[]) {
 
 export default function DashboardPage() {
   const { viewMode, setViewMode } = useBookingStore();
-  const { data: bookings = [], isLoading } = useBookings();
+  const { data: bookings = [], isLoading, isError } = useBookings();
 
   const stats = computeStats(bookings);
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          action={
+            <Button asChild className="bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150">
+              <Link href="/bookings/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle réservation
+              </Link>
+            </Button>
+          }
+        />
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white py-16 shadow-sm">
+          <p className="text-sm text-red-500">Erreur lors du chargement des données.</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

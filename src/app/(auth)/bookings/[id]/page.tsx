@@ -182,13 +182,22 @@ export default function BookingDetailPage() {
   const params = useParams();
   const bookingId = params.id as string;
 
-  const { data: booking, isLoading } = useBooking(bookingId);
+  const { data: booking, isLoading, isError } = useBooking(bookingId);
   const { data: payments = [], isLoading: paymentsLoading } = usePayments(bookingId);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24 text-sm text-slate-400">
         Chargement...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-24">
+        <p className="text-sm text-red-500">Erreur lors du chargement de la réservation.</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { signOut } from "next-auth/react";
 import { LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -14,9 +15,7 @@ import {
 export function AppHeader() {
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-6">
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-bold text-slate-900">LocaFlow</span>
-      </div>
+      <div />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -27,14 +26,19 @@ export function AppHeader() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <User className="h-4 w-4" />
-            Profil
+          <DropdownMenuItem asChild className="cursor-pointer gap-2">
+            <a href="/settings">
+              <User className="h-4 w-4" />
+              Profil
+            </a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer gap-2 text-red-600 focus:text-red-600">
+          <DropdownMenuItem
+            className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          >
             <LogOut className="h-4 w-4" />
-            Déconnexion
+            Deconnexion
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

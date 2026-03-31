@@ -11,9 +11,25 @@ async function fetchProperties(): Promise<Property[]> {
   return res.json() as Promise<Property[]>;
 }
 
+async function fetchProperty(id: string): Promise<Property> {
+  const res = await fetch(`/api/properties/${id}`);
+  if (!res.ok) throw new Error("Erreur réseau");
+  return res.json() as Promise<Property>;
+}
+
 async function createProperty(data: CreatePropertyInput): Promise<Property> {
   const res = await fetch("/api/properties", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Erreur réseau");
+  return res.json() as Promise<Property>;
+}
+
+async function updateProperty({ id, ...data }: CreatePropertyInput & { id: string }): Promise<Property> {
+  const res = await fetch(`/api/properties/${id}`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
@@ -28,6 +44,14 @@ export function useProperties() {
   });
 }
 
+export function useProperty(id: string) {
+  return useQuery({
+    queryKey: ["properties", id],
+    queryFn: () => fetchProperty(id),
+    enabled: !!id,
+  });
+}
+
 export function useCreateProperty() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -35,8 +59,16 @@ export function useCreateProperty() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["properties"] });
     },
-    onError: (error: Error) => {
-      console.error("useCreateProperty error:", error);
+  });
+}
+
+export function useUpdateProperty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateProperty,
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["properties"] });
+      void queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
     },
   });
 }
